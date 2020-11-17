@@ -8,11 +8,17 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
-import org.json.JSONException;
 import org.json.JSONObject;
+import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
 
 public class Save {
+	
+	private static final Logger logger = Logger.getLogger(Subscriber.class);
+	private String log4jConfPath = "src/main/java/middleware/log4j.properties";
+	
 	public boolean send(String data) throws ClientProtocolException, IOException {
+		PropertyConfigurator.configure(log4jConfPath);
 		CloseableHttpClient client = HttpClients.createDefault();
 	    HttpPost httpPost = new HttpPost("http://localhost:8080/doulike/REST/Service/Request");
 	    
@@ -37,14 +43,15 @@ public class Save {
 	    httpPost.setHeader("Content-type", "application/json");
 	 
 	    CloseableHttpResponse response = client.execute(httpPost);
-//	    System.out.println(response.getStatusLine().getStatusCode());
-//	    System.out.println(response.getEntity().getContent());
-//	    assertThat(response.getStatusLine().getStatusCode(), equalTo(200));
-	    
 	    client.close();
+	    
 	    if (response.getStatusLine().getStatusCode() != 200) {
+	    	logger.error("Save - Error");
+	    	logger.error("Error "+response.getStatusLine().getStatusCode());
+	    	logger.error("Error "+response.getEntity().getContent());
 	    	return false;
 	    }	    
+	    logger.info("Save - Completed");
 		return true;
 	}
 }

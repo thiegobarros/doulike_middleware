@@ -10,6 +10,8 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
 
 public class Subscriber implements MqttCallback {
 
@@ -17,6 +19,8 @@ public class Subscriber implements MqttCallback {
 	private int qos;
 	private String broker;
 	private String clientId;
+	private static final Logger logger = Logger.getLogger(Subscriber.class);
+	private String log4jConfPath = "src/main/java/middleware/log4j.properties";
 	
 	public Subscriber(
 		String topic,
@@ -64,6 +68,7 @@ public class Subscriber implements MqttCallback {
 
 	public void create() {
 	
+		PropertyConfigurator.configure(log4jConfPath);
 		MemoryPersistence persistence  = new MemoryPersistence();
 		String username = "creathus";
 		String password = "doulike";
@@ -77,11 +82,11 @@ public class Subscriber implements MqttCallback {
 	        sampleClient.setCallback(this);
 
 	        //Connection
-	        System.out.println("Connecting to broker: "+getBroker());
+	        logger.info("Connecting to broker: "+getBroker());
 	        connOpts.setUserName(username);
 	        connOpts.setPassword(password.toCharArray());
 	        sampleClient.connect(connOpts);
-	        System.out.println("Connected");
+	        logger.info("Connected");
 	        
 	        //Loop Connection
 	        while (sampleClient.isConnected()) {
@@ -90,16 +95,16 @@ public class Subscriber implements MqttCallback {
 	        
 	        //Disconnect
 	        sampleClient.disconnect();
-            System.out.println("Disconnected");
+	        logger.info("Disconnected");
             System.exit(0);
             
 	    } catch(MqttException me) {
 	    	
-	        System.out.println("reason "+me.getReasonCode());
-	        System.out.println("msg "+me.getMessage());
-	        System.out.println("loc "+me.getLocalizedMessage());
-	        System.out.println("cause "+me.getCause());
-	        System.out.println("excep "+me);
+	        logger.error("reason "+me.getReasonCode());
+	        logger.error("msg "+me.getMessage());
+	        logger.error("loc "+me.getLocalizedMessage());
+	        logger.error("cause "+me.getCause());
+	        logger.error("excep "+me);
 	        me.printStackTrace();
 	        
 	    }
@@ -111,7 +116,7 @@ public class Subscriber implements MqttCallback {
 	
 	public void messageArrived(String topic, MqttMessage message) throws MqttException, ClientProtocolException, IOException {
 		String data = new String(message.getPayload());
-        System.out.println(String.format("[%s] %s", topic, data));
+		logger.info(String.format("[%s] %s", topic, data));
         Save save = new Save();
         save.send(data);
     }
