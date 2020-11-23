@@ -17,41 +17,54 @@ public class Save {
 	private static final Logger logger = Logger.getLogger(Subscriber.class);
 	private String log4jConfPath = "src/main/java/middleware/log4j.properties";
 	
-	public boolean send(String data) throws ClientProtocolException, IOException {
+	public boolean send(String data, Sensor sensor, Historic hist) throws ClientProtocolException, IOException {
 		PropertyConfigurator.configure(log4jConfPath);
 		CloseableHttpClient client = HttpClients.createDefault();
 	    HttpPost httpPost = new HttpPost("http://localhost:8080/doulike/REST/Service/Request");
 	    
-	    JSONObject json = new JSONObject();
-	    json.put("serviceName", "CrudService");
-	    json.put("methodName", "saveLogSensor");
-	    
-	    JSONObject values = new JSONObject(data);
-	    
-	    JSONObject parameters = new JSONObject();
-	    parameters.put("name", "LogSensor");
-	    parameters.put("value", values);
-	    
-	    Object[] arrayParams = new Object[1];
-	    arrayParams[0] = parameters;
-	    
-	    json.put("parameters", arrayParams);
+	    try {
+	    	JSONObject json = new JSONObject();
+		    json.put("serviceName", "CrudService");
+		    json.put("methodName", "saveLogSensor");
+		    
+		    JSONObject values = new JSONObject(data);
+		    
+		    JSONObject parameters = new JSONObject();
+		    parameters.put("name", "LogSensor");
+		    parameters.put("value", values);
+		    
+		    Object[] arrayParams = new Object[1];
+		    arrayParams[0] = parameters;
+		    
+		    json.put("parameters", arrayParams);
 
-	    StringEntity entity = new StringEntity(json.toString());
-	    httpPost.setEntity(entity);
-	    httpPost.setHeader("Accept", "application/json");
-	    httpPost.setHeader("Content-type", "application/json");
-	 
-	    CloseableHttpResponse response = client.execute(httpPost);
-	    client.close();
-	    
-	    if (response.getStatusLine().getStatusCode() != 200) {
-	    	logger.error("Save - Error");
-	    	logger.error("Error "+response.getStatusLine().getStatusCode());
-	    	logger.error("Error "+response.getEntity().getContent());
+		    StringEntity entity = new StringEntity(json.toString());
+		    httpPost.setEntity(entity);
+		    httpPost.setHeader("Accept", "application/json");
+		    httpPost.setHeader("Content-type", "application/json");
+		 
+		    CloseableHttpResponse response = client.execute(httpPost);
+		    client.close();
+		    
+		    if (response.getStatusLine().getStatusCode() != 200) {
+		    	logger.error("Sensor request - "+sensor.print());
+		    	logger.error("Error - "+response.getStatusLine().getStatusCode());
+		    	logger.error("Error - "+response.getEntity().getContent());
+		    	hist.pushHistoric(false, sensor, response.getEntity().getContent().toString());
+		    	return false;
+		    }
+		    
+		    logger.info("Saved - "+sensor.print());
+		    hist.pushHistoric(true, sensor, "Sensor salvo com sucesso");
+			return true;
+			
+	    } catch (IOException ex) {
+	    	logger.error("Sensor - "+sensor.print());
+	    	logger.error("Exception - "+ex);
+	    	hist.pushHistoric(false, sensor, ex.toString());
 	    	return false;
-	    }	    
-	    logger.info("Save - Completed");
-		return true;
+	    }
+	    
+	    
 	}
 }

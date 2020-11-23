@@ -100,11 +100,12 @@ public class Subscriber implements MqttCallback {
             
 	    } catch(MqttException me) {
 	    	
-	        logger.error("reason "+me.getReasonCode());
-	        logger.error("msg "+me.getMessage());
-	        logger.error("loc "+me.getLocalizedMessage());
-	        logger.error("cause "+me.getCause());
-	        logger.error("excep "+me);
+	    	logger.error("[Mqtt Error]");
+	        logger.error("reason - "+me.getReasonCode());
+	        logger.error("msg - "+me.getMessage());
+	        logger.error("loc - "+me.getLocalizedMessage());
+	        logger.error("cause - "+me.getCause());
+	        logger.error("exception - "+me);
 	        me.printStackTrace();
 	        
 	    }
@@ -115,10 +116,16 @@ public class Subscriber implements MqttCallback {
 	}
 	
 	public void messageArrived(String topic, MqttMessage message) throws MqttException, ClientProtocolException, IOException {
+		logger.info("entrou no arrived");
 		String data = new String(message.getPayload());
-		logger.info(String.format("[%s] %s", topic, data));
         Save save = new Save();
-        save.send(data);
+        Sensor sensor = new Sensor(data);
+        Historic hist = new Historic();
+        
+        logger.info("Sensor sended - "+sensor.print());
+        hist.pushHistoric(true, sensor, "Pronto para salvar");
+        save.send(data, sensor, hist);
+        logger.info(hist.get().toString());
     }
 	
 	public void deliveryComplete(IMqttDeliveryToken token) {
