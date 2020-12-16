@@ -123,8 +123,9 @@ public class Subscriber implements MqttCallback {
         Historic hist = new Historic();
         
         logger.info("Sensor sended - "+sensor.print());
-        hist.pushHistoric(true, sensor, "Pronto para salvar");
+        hist.pushHistoric(true, sensor, "Pronto para salvar", "readyToSave");
         save.send(data, sensor, hist);
+        save.sendHistoric(hist);
         logger.info(hist.get().toString());
     }
 	

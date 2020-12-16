@@ -20,23 +20,10 @@ public class Save {
 	public boolean send(String data, Sensor sensor, Historic hist) throws ClientProtocolException, IOException {
 		PropertyConfigurator.configure(log4jConfPath);
 		CloseableHttpClient client = HttpClients.createDefault();
-	    HttpPost httpPost = new HttpPost("http://localhost:8080/doulike/REST/Service/Request");
+	    HttpPost httpPost = new HttpPost("http://localhost:8080/doulike/logSensor");
 	    
 	    try {
-	    	JSONObject json = new JSONObject();
-		    json.put("serviceName", "CrudService");
-		    json.put("methodName", "saveLogSensor");
-		    
-		    JSONObject values = new JSONObject(data);
-		    
-		    JSONObject parameters = new JSONObject();
-		    parameters.put("name", "LogSensor");
-		    parameters.put("value", values);
-		    
-		    Object[] arrayParams = new Object[1];
-		    arrayParams[0] = parameters;
-		    
-		    json.put("parameters", arrayParams);
+	    	JSONObject json = new JSONObject(data);
 
 		    StringEntity entity = new StringEntity(json.toString());
 		    httpPost.setEntity(entity);
@@ -50,21 +37,48 @@ public class Save {
 		    	logger.error("Sensor request - "+sensor.print());
 		    	logger.error("Error - "+response.getStatusLine().getStatusCode());
 		    	logger.error("Error - "+response.getEntity().getContent());
-		    	hist.pushHistoric(false, sensor, response.getEntity().getContent().toString());
+		    	hist.pushHistoric(false, sensor, response.getEntity().getContent().toString(), "requestError");
 		    	return false;
 		    }
 		    
 		    logger.info("Saved - "+sensor.print());
-		    hist.pushHistoric(true, sensor, "Sensor salvo com sucesso");
+		    hist.pushHistoric(true, sensor, "Sensor salvo com sucesso", "successSave");
 			return true;
 			
 	    } catch (IOException ex) {
 	    	logger.error("Sensor - "+sensor.print());
 	    	logger.error("Exception - "+ex);
-	    	hist.pushHistoric(false, sensor, ex.toString());
+	    	hist.pushHistoric(false, sensor, ex.toString(), "internalError");
 	    	return false;
 	    }
-	    
-	    
+	}
+	
+	public boolean sendHistoric(Historic hist) throws ClientProtocolException, IOException {
+		PropertyConfigurator.configure(log4jConfPath);
+		CloseableHttpClient client = HttpClients.createDefault();
+	    HttpPost httpPost = new HttpPost("http://localhost:8080/doulike/logMiddleware/All");
+		
+		try {			
+			StringEntity entity = new StringEntity(hist.get().toString());
+		    httpPost.setEntity(entity);
+		    httpPost.setHeader("Accept", "application/json");
+		    httpPost.setHeader("Content-type", "application/json");
+		 
+		    CloseableHttpResponse response = client.execute(httpPost);
+		    client.close();
+		    
+		    if (response.getStatusLine().getStatusCode() != 200) {
+		    	logger.error("Historic request");
+		    	logger.error("Error - "+response.getStatusLine().getStatusCode());
+		    	logger.error("Error - "+response.getEntity().getContent());
+		    	return false;
+		    }
+		    
+		    logger.info("Historic Saved");
+			return true;
+		} catch (IOException ex) {
+			logger.info("Historic Internal Error");
+			return false;
+		}
 	}
 }

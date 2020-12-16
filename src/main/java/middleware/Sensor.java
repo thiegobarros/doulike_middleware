@@ -39,7 +39,7 @@ public class Sensor {
 	public void makeSensor(String values) {
 		JSONObject sensor = new JSONObject(values);
 		
-		setMac(sensor.getString("sensor_mac"));
+		setMac(sensor.getString("mac"));
 		setType(sensor.getString("type"));
 		setValue(sensor.getString("value"));
 	}

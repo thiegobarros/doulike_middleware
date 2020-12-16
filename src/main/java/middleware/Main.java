@@ -5,7 +5,7 @@ public class Main {
 		
 		String topic = "creathus/doulike";
 		int qos = 2;
-		String broker = "tcp://192.168.0.93:1883";
+		String broker = "tcp://192.168.0.105:1883";
 		String clientId = "creathus/doulike";
 		
 		Subscriber subs = new Subscriber(
